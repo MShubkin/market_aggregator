@@ -1,0 +1,28 @@
+button {
+  background-color: #008f53; /* Green */
+  border: 0;
+  color: white;
+  padding: 14px 14px;
+  text-align: center;
+  font-size: 16px;
+  margin: 2px 2px;
+  width: 100px;
+}
+
+.counter {
+  color: #008f53;
+  font-size: 48px;
+  text-align: center;
+}
+
+.footer {
+  text-align: center;
+  font-size: 12px;
+}
+
+.panel {
+  display: flex;
+  justify-content: center;
+}
+
+/*# sourceMappingURL=data:application/json;charset=utf-8,%7B%22version%22:3,%22sourceRoot%22:%22%22,%22sources%22:%5B%22../../index.scss%22%5D,%22names%22:%5B%5D,%22mappings%22:%22AAAA;EACE;EACA;EACA;EACA;EACA;EACA;EACA;EACA;;;AAGF;EACI;EACA;EACA;;;AAGJ;EACI;EACA;;;AAGJ;EACE;EACA%22,%22file%22:%22index.css%22%7D */
