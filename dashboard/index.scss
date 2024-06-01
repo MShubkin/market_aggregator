@@ -2,34 +2,40 @@ body {
   font-family: 'lato', sans-serif;
 }
 .container {
-  max-width: 1000px;
+  max-width: 510px;
+  margin-right: auto;
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-top: 10px;
+  font-size: 13px;
+}
+.title {
+  max-width: 510px;
   margin-left: auto;
   margin-right: auto;
   padding-left: 10px;
   padding-right: 10px;
-}
-
-h2 {
-  font-size: 26px;
-  margin: 20px 0;
-  text-align: center;
-  small {
-    font-size: 0.5em;
-  }
+  padding-top: 10px;
+  font-size: 13px;
+  color: #FFFFFF;
+  background-color: #20207C;
+  border-radius: 5px;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
 }
 
 .responsive-table {
   li {
-    border-radius: 3px;
-    padding: 25px 30px;
+    border-radius: 5px;
+    padding: 7px 7px;
     display: flex;
     justify-content: space-between;
-    margin-bottom: 25px;
+    margin-bottom: 5px;
   }
   .table-header {
-    background-color: #95A5A6;
-    font-size: 14px;
-    text-transform: uppercase;
+    background-color: #E0E0E0;
+    font-size: 12px;
     letter-spacing: 0.03em;
   }
   .table-row {
@@ -37,37 +43,46 @@ h2 {
     box-shadow: 0px 0px 9px 0px rgba(0,0,0,0.1);
   }
   .col-1 {
-    flex-basis: 10%;
+    flex-basis: 70px;
+
   }
   .col-2 {
-    flex-basis: 40%;
+    flex-basis: 70px;
+    text-align: center;
   }
   .col-3 {
-    flex-basis: 25%;
+    flex-basis: 70px;
+    text-align: center;
   }
   .col-4 {
-    flex-basis: 25%;
+    flex-basis: 70px;
+    text-align: center;
   }
   .col-5 {
-    flex-basis: 25%;
+    flex-basis: 70px;
+    text-align: center;
   }
   .col-6 {
-    flex-basis: 25%;
+    flex-basis: 70px;
+    text-align: center;
   }
-  @media all and (max-width: 767px) {
+  .col-7 {
+    flex-basis: 70px;
+    text-align: center;
+  }
+
+
+  @media all and (max-width: 800px) {
     .table-header {
       display: none;
     }
     .table-row{
-
     }
     li {
       display: block;
     }
     .col {
-
       flex-basis: 100%;
-
     }
     .col {
       display: flex;
