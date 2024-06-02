@@ -1,5 +1,3 @@
-use crate::common::{create_html_error_message, MarketResult};
-use crate::components::dashboard::DashboardComponent;
 use futures::{SinkExt, StreamExt};
 use gloo::console;
 use gloo_net::websocket::{futures::WebSocket, Message};
@@ -10,8 +8,12 @@ use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 use yew::{html, Component, Context, Html};
 
+use crate::common::MarketResult;
+use crate::components::dashboard::DashboardComponent;
+
 mod common;
 mod components;
+mod services;
 
 #[function_component]
 pub fn App() -> Html {

@@ -1,25 +1,26 @@
-use crate::common::env::{MARKET_API_KEY, MARKET_REAL_TIME_PRICE_ROUTE, MARKET_WS_ADDRESS};
-use crate::common::MarketResult;
-use futures::lock::Mutex;
-use futures::stream::{SplitSink, SplitStream};
-use futures::{SinkExt, StreamExt};
-use gloo_net::websocket::futures::WebSocket;
-use gloo_net::websocket::{Message, WebSocketError};
-use log::{debug, error, info};
-use serde::{Deserialize, Deserializer, Serialize};
 use std::borrow::BorrowMut;
 use std::collections::HashSet;
 use std::fmt::{format, Debug};
 use std::sync::Arc;
 use std::time::Duration;
+
+use futures::lock::Mutex;
+use futures::stream::{SplitSink, SplitStream};
+use futures::{SinkExt, StreamExt};
 use gloo::net::http::Request;
+use gloo_net::websocket::futures::WebSocket;
+use gloo_net::websocket::{Message, WebSocketError};
+use log::{debug, error, info};
+use serde::{Deserialize, Deserializer, Serialize};
 use wasm_bindgen_futures::spawn_local;
-use yew::{AttrValue, Callback};
 use yew::platform::pinned::RwLock;
 use yew::platform::time::sleep;
+use yew::{AttrValue, Callback};
+
+use crate::common::env::{MARKET_API_KEY, MARKET_REAL_TIME_PRICE_ROUTE, MARKET_WS_ADDRESS};
+use crate::common::MarketResult;
 
 const NINE_SEC: Duration = Duration::from_secs(9);
-
 
 pub struct WebSocketService {
     web_socket_writer: Arc<Mutex<SplitSink<WebSocket, Message>>>,
@@ -97,9 +98,7 @@ impl WebSocketService {
         Ok(())
     }
 
-    pub fn heartbeat(
-        &mut self
-    ) -> MarketResult<()> {
+    pub fn heartbeat(&mut self) -> MarketResult<()> {
         let msg = format!(
             "{{
                 \"action\": \"heartbeat\"
@@ -112,15 +111,15 @@ impl WebSocketService {
                 let result = writer.send(Message::Text(msg.to_string())).await;
                 match result {
                     Ok(_) => {}
-                    Err(error) => { error!("{}", format!("web socket error {:?}", error)); }
+                    Err(error) => {
+                        error!("{}", format!("web socket error {:?}", error));
+                    }
                 }
                 sleep(NINE_SEC).await;
             }
         });
         Ok(())
     }
-
-
 }
 
 #[derive(Serialize, Deserialize, Debug)]

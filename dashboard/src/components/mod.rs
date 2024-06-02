@@ -1,2 +1,2 @@
-pub(crate) mod dashboard;
-pub(crate) mod quotes;
+pub mod dashboard;
+pub mod quotes;

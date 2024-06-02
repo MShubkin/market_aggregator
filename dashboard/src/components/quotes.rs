@@ -1,6 +1,7 @@
+use std::collections::HashMap;
+use std::sync::Arc;
+
 use linked_hash_set::LinkedHashSet;
-use std::collections::{HashMap, HashSet};
-use std::sync::{Arc, RwLock};
 use yew::{function_component, html, Component, Html, Properties};
 
 #[derive(Properties, PartialEq, Clone)]
