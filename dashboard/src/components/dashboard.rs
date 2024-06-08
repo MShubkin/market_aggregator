@@ -10,25 +10,34 @@ use gloo_net::websocket::Message;
 use linked_hash_set::LinkedHashSet;
 use log::{error, info};
 use wasm_bindgen_futures::spawn_local;
-use yew::{AttrValue, Component, Context, html, Html, Properties, use_state};
+use yew::{html, use_state, AttrValue, Component, Context, Html, Properties};
 
 use crate::common::config::DashboardConfiguration;
-use crate::common::enums::QuoteType;
-use crate::common::MarketResult;
+use crate::common::enums::{QuoteType, QuotesComponentType};
+use crate::common::error::MarketError;
 use crate::common::utils::format_time;
+use crate::common::MarketResult;
 use crate::components::quotes::{PriceData, QuotesComponent, QuotesProps};
+use crate::services::restapi::{EndOfDay, Quote, RestApiService};
 use crate::services::websocket::{
-    PriceMessage, WebSocketService, WSResponseEvent, WSResponseEventType,
+    PriceMessage, WSResponseEvent, WSResponseEventType, WebSocketService,
 };
 
 pub struct DashboardComponent {
     crypto_currencies_symbols: Arc<LinkedHashSet<String>>,
     currencies_symbols: Arc<LinkedHashSet<String>>,
+    indices_symbols: Arc<LinkedHashSet<String>>,
+    us_stocks_symbols: Arc<LinkedHashSet<String>>,
     prices: Arc<RwLock<HashMap<String, PriceData>>>,
+    end_of_day: Arc<HashMap<String, EndOfDay>>,
+    last_quote: Arc<HashMap<String, Quote>>,
 }
 
 pub enum DashboardMessage {
+    EndOfDayResponse(HashMap<String, EndOfDay>),
+    LastQuoteResponse(HashMap<String, Quote>),
     WebSocketResponse(String),
+    MarketErrorResponse(MarketError),
 }
 
 impl Component for DashboardComponent {
@@ -36,6 +45,28 @@ impl Component for DashboardComponent {
     type Properties = ();
 
     fn create(ctx: &Context<Self>) -> Self {
+       ctx.link().send_future(async {
+            match RestApiService::get_end_of_day_data(
+                DashboardConfiguration::get_all_quote_symbols(),
+            )
+            .await
+            {
+                Ok(data) => DashboardMessage::EndOfDayResponse(data),
+                Err(err) => DashboardMessage::MarketErrorResponse(err),
+            }
+        });
+
+        ctx.link().send_future(async {
+            match RestApiService::get_last_quote(
+                DashboardConfiguration::get_all_quote_symbols(),
+            )
+                .await
+            {
+                Ok(data) => DashboardMessage::LastQuoteResponse(data),
+                Err(err) => DashboardMessage::MarketErrorResponse(err),
+            }
+        });
+
         let ws_soket_result = WebSocketService::open_ws_connection();
         match ws_soket_result {
             Ok(mut web_socket) => {
@@ -57,7 +88,11 @@ impl Component for DashboardComponent {
                 DashboardConfiguration::get_crypto_currencies_symbols(),
             ),
             currencies_symbols: Arc::new(DashboardConfiguration::get_currencies_symbols()),
+            indices_symbols: Arc::new(DashboardConfiguration::get_indices_symbols()),
+            us_stocks_symbols: Arc::new(DashboardConfiguration::get_us_stocks()),
             prices: Arc::new(RwLock::new(HashMap::new())),
+            end_of_day: Default::default(),
+            last_quote: Arc::new(Default::default()),
         }
     }
 
@@ -96,6 +131,19 @@ impl Component for DashboardComponent {
                     }
                 }
             }
+
+            DashboardMessage::EndOfDayResponse(data) => {
+                self.end_of_day = Arc::new(data);
+                return false;
+            }
+            DashboardMessage::LastQuoteResponse(data) => {
+                self.last_quote = Arc::new(data);
+
+                info!("self.last_quote: {:?}", &self.last_quote);
+            }
+            DashboardMessage::MarketErrorResponse(error) => {
+                info!("MarketErrorResponse response {}", error);
+            }
         }
         true
     }
@@ -103,19 +151,48 @@ impl Component for DashboardComponent {
     fn view(&self, ctx: &Context<Self>) -> Html {
         let crypto_currencies_props = QuotesProps {
             title: "Крипто-валюты".to_owned(),
+            component_type: QuotesComponentType::BidAsk,
             symbols: self.crypto_currencies_symbols.clone(),
             prices: self.get_quote_data(QuoteType::CryptoCurrency),
+            end_of_day: self.end_of_day.clone(),
+            last_quote: self.last_quote.clone(),
         };
         let currencies_props = QuotesProps {
             title: "Мировые валюты".to_owned(),
+            component_type: QuotesComponentType::BidAsk,
             symbols: self.currencies_symbols.clone(),
             prices: self.get_quote_data(QuoteType::Currency),
+            end_of_day: self.end_of_day.clone(),
+            last_quote: self.last_quote.clone(),
         };
-
+        let indices_stock_props = QuotesProps {
+            title: "Индексы".to_owned(),
+            component_type: QuotesComponentType::OnlyPrice,
+            symbols: self.indices_symbols.clone(),
+            prices: self.get_quote_data(QuoteType::Indices),
+            end_of_day: self.end_of_day.clone(),
+            last_quote: self.last_quote.clone(),
+        };
+        let us_stock_props = QuotesProps {
+            title: "Акции".to_owned(),
+            component_type: QuotesComponentType::OnlyPrice,
+            symbols: self.us_stocks_symbols.clone(),
+            prices: self.get_quote_data(QuoteType::USStocks),
+            end_of_day: self.end_of_day.clone(),
+            last_quote: self.last_quote.clone(),
+        };
         html! {
-            <div>
-                  <div><QuotesComponent ..crypto_currencies_props.clone() /></div>
-                  <div><QuotesComponent ..currencies_props.clone() /></div>
+              <div class="row">
+                  <div class="column1">
+                        <div><QuotesComponent ..crypto_currencies_props.clone() /></div>
+                        <div><QuotesComponent ..currencies_props.clone() /></div>
+                  </div>
+                 <div class="column2">
+                        <div><QuotesComponent ..indices_stock_props.clone() /></div>
+                  </div>
+                  <div class="column3">
+                        <div><QuotesComponent ..us_stock_props.clone() /></div>
+                  </div>
             </div>
         }
     }

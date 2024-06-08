@@ -18,6 +18,7 @@ use yew::platform::time::sleep;
 use yew::{AttrValue, Callback};
 
 use crate::common::env::{MARKET_API_KEY, MARKET_REAL_TIME_PRICE_ROUTE, MARKET_WS_ADDRESS};
+use crate::common::utils::prepare_symbols_for_url;
 use crate::common::MarketResult;
 
 const NINE_SEC: Duration = Duration::from_secs(9);
@@ -50,13 +51,6 @@ impl WebSocketService {
         symbols: HashSet<String>,
         response_callback: Callback<String>,
     ) -> MarketResult<()> {
-        let symbols_str = symbols.iter().fold("".to_owned(), |mut acc, x| {
-            if !acc.is_empty() {
-                acc.push_str(",")
-            };
-            acc.push_str(x);
-            acc
-        });
         let msg = format!(
             "{{
                 \"action\": \"subscribe\",
@@ -64,7 +58,7 @@ impl WebSocketService {
                 \"symbols\": \"{}\"
                             }}
         }}",
-            symbols_str
+            prepare_symbols_for_url(symbols)
         );
 
         let writer = self.web_socket_writer.clone();

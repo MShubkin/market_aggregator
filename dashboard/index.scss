@@ -2,7 +2,6 @@ body {
   font-family: 'lato', sans-serif;
 }
 .container {
-  max-width: 510px;
   margin-right: auto;
   padding-left: 10px;
   padding-right: 10px;
@@ -10,7 +9,6 @@ body {
   font-size: 13px;
 }
 .title {
-  max-width: 510px;
   margin-left: auto;
   margin-right: auto;
   padding-left: 10px;
@@ -24,6 +22,15 @@ body {
   justify-content: space-between;
   margin-bottom: 5px;
 }
+
+
+.bid-ask-comp{
+  max-width: 580px;
+}
+.only-price-comp{
+  max-width: 420px;
+}
+
 
 .responsive-table {
   li {
@@ -43,32 +50,33 @@ body {
     box-shadow: 0px 0px 9px 0px rgba(0,0,0,0.1);
   }
   .col-1 {
-    flex-basis: 70px;
+    flex-basis: 80px;
+    text-align: left;
 
   }
   .col-2 {
-    flex-basis: 70px;
-    text-align: center;
+    flex-basis: 80px;
+    text-align: right;
   }
   .col-3 {
-    flex-basis: 70px;
-    text-align: center;
+    flex-basis: 80px;
+    text-align: right;
   }
   .col-4 {
-    flex-basis: 70px;
-    text-align: center;
+    flex-basis: 80px;
+    text-align: right;
   }
   .col-5 {
-    flex-basis: 70px;
-    text-align: center;
+    flex-basis: 80px;
+    text-align: right;
   }
   .col-6 {
-    flex-basis: 70px;
-    text-align: center;
+    flex-basis: 80px;
+    text-align: right;
   }
   .col-7 {
-    flex-basis: 70px;
-    text-align: center;
+    flex-basis: 80px;
+    text-align: right;
   }
 
 
@@ -96,4 +104,30 @@ body {
       }
     }
   }
+}
+
+.color-red{
+  color: #FF0000;
+}
+.color-green{
+  color: #008000;
+}
+
+.column1 {
+  float: left;
+  width: 33%;
+}
+.column2 {
+  float: left;
+  width: 30%;
+}
+.column3 {
+  float: left;
+  width: 30%;
+}
+
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
 }

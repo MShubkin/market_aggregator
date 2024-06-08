@@ -2,6 +2,7 @@ use std::fmt::{Display, Formatter};
 
 use derive_more::From;
 use gloo::utils::errors::JsError;
+use gloo_net::Error;
 use thiserror::Error;
 use yew::{html, Html};
 
@@ -11,6 +12,10 @@ pub enum MarketError {
     JsError(JsError),
     #[error("Env error: {0}")]
     EnvError(EnvErrorType),
+    #[error("Gloo net error: {0}")]
+    GlooNetError(Error),
+    #[error("Serde json error: {0}")]
+    SerdeJsonError(serde_json::error::Error),
 }
 
 #[derive(Debug, Clone)]
