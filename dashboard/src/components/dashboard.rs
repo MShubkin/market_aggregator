@@ -26,7 +26,7 @@ use crate::common::error::MarketError;
 use crate::common::utils::format_time;
 use crate::common::MarketResult;
 use crate::components::quotes::{PriceData, QuotesComponent, QuotesProps};
-use crate::components::use_sleep::use_load_data;
+use crate::components::suspense::use_load_data;
 use crate::services::restapi::RestApiService;
 use crate::services::websocket::{
     PriceMessage, WSResponseEvent, WSResponseEventType, WebSocketService,
