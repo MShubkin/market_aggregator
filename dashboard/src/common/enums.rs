@@ -1,3 +1,6 @@
+use yew::Properties;
+
+#[derive(PartialEq, Clone)]
 pub enum QuoteType {
     CryptoCurrency,
     Currency,

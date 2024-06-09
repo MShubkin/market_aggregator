@@ -1,20 +1,23 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use crate::common::enums::QuotesComponentType;
+use crate::common::entities::{EndOfDay, Quote, ReferenceData};
+use crate::common::enums::{QuoteType, QuotesComponentType};
 use crate::common::utils::{format_time, round_f64, round_f64_str};
-use crate::services::restapi::{EndOfDay, Quote};
 use linked_hash_set::LinkedHashSet;
+use log::info;
 use yew::{classes, function_component, html, Component, Html, Properties};
 
 #[derive(Properties, PartialEq, Clone)]
 pub(crate) struct QuotesProps {
     pub(crate) title: String,
     pub(crate) component_type: QuotesComponentType,
+    pub(crate) quote_type: QuoteType,
     pub(crate) symbols: Arc<LinkedHashSet<String>>,
     pub(crate) prices: HashMap<String, PriceData>,
     pub(crate) end_of_day: Arc<HashMap<String, EndOfDay>>,
     pub(crate) last_quote: Arc<HashMap<String, Quote>>,
+    pub(crate) reference_data: Arc<ReferenceData>,
 }
 
 /// Ценовая информация финансового инструмента
@@ -71,6 +74,9 @@ pub(crate) fn QuotesComponent(props: &QuotesProps) -> Html {
                </li>
            {
                props.symbols.iter().map(|symbol| {
+
+                   let symbol_display = get_symbol_name(symbol, &props.quote_type, &props.reference_data);
+
                    let mut price_value ="".to_owned();
                    let mut bid_value ="".to_owned();
                    let mut ask_value ="".to_owned();
@@ -88,9 +94,9 @@ pub(crate) fn QuotesComponent(props: &QuotesProps) -> Html {
                    }
 
                    if let Some(last_quote) = props.last_quote.get(symbol){
-                        price_value = last_quote.close.to_string();
-                        bid_value = last_quote.close.to_string();
-                        ask_value = last_quote.close.to_string();
+                        price_value = round_f64_str(last_quote.close.clone()).to_string();
+                        bid_value = round_f64_str(last_quote.close.clone()).to_string();
+                        ask_value = round_f64_str(last_quote.close.clone()).to_string();
                         time_value =  format_time(last_quote.timestamp);
 
                         if round_f64_str(last_quote.change.clone()) == 0.00{
@@ -137,7 +143,7 @@ pub(crate) fn QuotesComponent(props: &QuotesProps) -> Html {
                 }
                    html!{
                        <li class="table-row">
-                         <div class="col col-1" data-label="Инструмент">{symbol}</div>
+                         <div class="col col-1" data-label="Инструмент">{symbol_display}</div>
                          <div class="col col-2" data-label="Цена">{price_value}</div>
                           if props.component_type == QuotesComponentType::BidAsk {
                             <div class="col col-3" data-label="Покупка">{bid_value}</div>
@@ -152,5 +158,31 @@ pub(crate) fn QuotesComponent(props: &QuotesProps) -> Html {
            }
              </ul>
            </div>
+    }
+}
+
+fn get_symbol_name(
+    symbol: &String,
+    quote_type: &QuoteType,
+    reference_data: &ReferenceData,
+) -> String {
+    match quote_type {
+        QuoteType::Indices => {
+            if let Some(indice) = reference_data.indices.get(symbol) {
+                indice.name.clone()
+            }
+            else {
+                symbol.clone()
+            }
+        }
+        QuoteType::USStocks => {
+            if let Some(indice) = reference_data.us_stocks.get(symbol) {
+                indice.name.clone()
+            }
+            else {
+                symbol.clone()
+            }
+        }
+        _ => symbol.clone(),
     }
 }

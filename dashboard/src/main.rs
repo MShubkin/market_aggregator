@@ -9,7 +9,7 @@ use yew::prelude::*;
 use yew::{html, Component, Context, Html};
 
 use crate::common::MarketResult;
-use crate::components::dashboard::DashboardComponent;
+use crate::components::dashboard::{AppContent, DashboardComponent, WithLoadingData};
 
 mod common;
 mod components;
@@ -17,8 +17,19 @@ mod services;
 
 #[function_component]
 pub fn App() -> Html {
+    //let fallback = html! {<PleaseWait/>};
+    let fallback = html! {<div>{"Loading..."}</div>};
+    /*
+        html! {
+                   <Suspense fallback={fallback}>
+                            <WithLoadingData/>
+                    </Suspense>
+        }
+    */
     html! {
-        <DashboardComponent/>
+        <Suspense {fallback}>
+            <AppContent />
+        </Suspense>
     }
 }
 
@@ -28,4 +39,9 @@ fn main() {
     info!("Start Market Aggregator Application");
 
     yew::Renderer::<App>::new().render();
+}
+
+#[function_component(PleaseWait)]
+fn please_wait() -> Html {
+    html! {<h1>{"Loading data..."}</h1>}
 }

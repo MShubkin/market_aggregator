@@ -2,7 +2,9 @@
 
 pub const MARKET_API_KEY: &'static str = "966a6f155f0d4567aa908d48c12cec67";
 pub const MARKET_EOD_ROUTE: &'static str = "/eod";
+pub const MARKET_INDICES_ROUTE: &'static str = "/indices";
 pub const MARKET_QUOTE_ROUTE: &'static str = "/quote";
 pub const MARKET_REAL_TIME_PRICE_ROUTE: &'static str = "/quotes/price";
 pub const MARKET_REST_ADDRESS: &'static str = "https://api.twelvedata.com";
+pub const MARKET_STOCKS_ROUTE: &'static str = "/stocks";
 pub const MARKET_WS_ADDRESS: &'static str = "wss://ws.twelvedata.com/v1";

@@ -25,10 +25,10 @@ body {
 
 
 .bid-ask-comp{
-  max-width: 580px;
+  max-width: 640px;
 }
 .only-price-comp{
-  max-width: 420px;
+  max-width: 480px;
 }
 
 
@@ -50,9 +50,10 @@ body {
     box-shadow: 0px 0px 9px 0px rgba(0,0,0,0.1);
   }
   .col-1 {
-    flex-basis: 80px;
+    flex-basis: 100px;
     text-align: left;
-
+    color: #20207C;
+    text-decoration: underline;
   }
   .col-2 {
     flex-basis: 80px;
@@ -115,7 +116,7 @@ body {
 
 .column1 {
   float: left;
-  width: 33%;
+  width: 40%;
 }
 .column2 {
   float: left;

@@ -33,7 +33,6 @@ impl DashboardConfiguration {
         s.insert("DJT".to_owned()); //Dow Jones Transportation Average
         s.insert("COMP".to_owned()); //NASDAQ Composite Index
         s.insert("NYA".to_owned()); //NYSE Composite Index
-        s.insert("GSPC".to_owned()); //SAP500
         s.insert("SPX".to_owned()); //S&P 500 Index
         s.insert("MID".to_owned()); //S&P MidCap 400
         s.insert("OEX".to_owned()); //S&P 100 Index

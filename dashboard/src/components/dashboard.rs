@@ -1,4 +1,5 @@
 use std::collections::{HashMap, HashSet};
+use std::rc::Rc;
 use std::sync::{Arc, RwLock};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
@@ -10,18 +11,51 @@ use gloo_net::websocket::Message;
 use linked_hash_set::LinkedHashSet;
 use log::{error, info};
 use wasm_bindgen_futures::spawn_local;
-use yew::{html, use_state, AttrValue, Component, Context, Html, Properties};
+use wasm_logger::init;
+use yew::platform::time::sleep;
+use yew::suspense::{Suspension, SuspensionResult};
+use yew::{
+    function_component, hook, html, use_effect_with_deps, use_state, AttrValue, BaseComponent,
+    Component, Context, Html, HtmlResult, Properties, Reducible, UseStateHandle,
+};
 
 use crate::common::config::DashboardConfiguration;
+use crate::common::entities::{EndOfDay, Quote, ReferenceData};
 use crate::common::enums::{QuoteType, QuotesComponentType};
 use crate::common::error::MarketError;
 use crate::common::utils::format_time;
 use crate::common::MarketResult;
 use crate::components::quotes::{PriceData, QuotesComponent, QuotesProps};
-use crate::services::restapi::{EndOfDay, Quote, RestApiService};
+use crate::components::use_sleep::use_load_data;
+use crate::services::restapi::RestApiService;
 use crate::services::websocket::{
     PriceMessage, WSResponseEvent, WSResponseEventType, WebSocketService,
 };
+
+pub type AppContent = WithLoadingData<DashboardComponent>;
+
+#[function_component]
+pub fn WithLoadingData<Comp>() -> HtmlResult
+where
+    Comp: BaseComponent<Properties = DashboardComponentProps>,
+{
+    let reference_data = use_load_data()?;
+
+    Ok(
+        yew::virtual_dom::VChild::<Comp>::new(DashboardComponentProps { reference_data }, None)
+            .into(),
+    )
+}
+
+#[derive(PartialEq, Default)]
+pub struct ReferenceDataState {
+    reference_data: Option<ReferenceData>,
+}
+
+#[derive(Debug, PartialEq, Properties)]
+pub struct DashboardComponentProps {
+    reference_data: ReferenceData,
+}
 
 pub struct DashboardComponent {
     crypto_currencies_symbols: Arc<LinkedHashSet<String>>,
@@ -31,6 +65,7 @@ pub struct DashboardComponent {
     prices: Arc<RwLock<HashMap<String, PriceData>>>,
     end_of_day: Arc<HashMap<String, EndOfDay>>,
     last_quote: Arc<HashMap<String, Quote>>,
+    reference_data: Arc<ReferenceData>,
 }
 
 pub enum DashboardMessage {
@@ -42,10 +77,10 @@ pub enum DashboardMessage {
 
 impl Component for DashboardComponent {
     type Message = DashboardMessage;
-    type Properties = ();
+    type Properties = DashboardComponentProps;
 
     fn create(ctx: &Context<Self>) -> Self {
-       ctx.link().send_future(async {
+        ctx.link().send_future(async {
             match RestApiService::get_end_of_day_data(
                 DashboardConfiguration::get_all_quote_symbols(),
             )
@@ -57,9 +92,7 @@ impl Component for DashboardComponent {
         });
 
         ctx.link().send_future(async {
-            match RestApiService::get_last_quote(
-                DashboardConfiguration::get_all_quote_symbols(),
-            )
+            match RestApiService::get_last_quote(DashboardConfiguration::get_all_quote_symbols())
                 .await
             {
                 Ok(data) => DashboardMessage::LastQuoteResponse(data),
@@ -93,6 +126,7 @@ impl Component for DashboardComponent {
             prices: Arc::new(RwLock::new(HashMap::new())),
             end_of_day: Default::default(),
             last_quote: Arc::new(Default::default()),
+            reference_data: Arc::new(ctx.props().reference_data.clone()),
         }
     }
 
@@ -138,8 +172,6 @@ impl Component for DashboardComponent {
             }
             DashboardMessage::LastQuoteResponse(data) => {
                 self.last_quote = Arc::new(data);
-
-                info!("self.last_quote: {:?}", &self.last_quote);
             }
             DashboardMessage::MarketErrorResponse(error) => {
                 info!("MarketErrorResponse response {}", error);
@@ -152,34 +184,42 @@ impl Component for DashboardComponent {
         let crypto_currencies_props = QuotesProps {
             title: "Крипто-валюты".to_owned(),
             component_type: QuotesComponentType::BidAsk,
+            quote_type: QuoteType::CryptoCurrency,
             symbols: self.crypto_currencies_symbols.clone(),
             prices: self.get_quote_data(QuoteType::CryptoCurrency),
             end_of_day: self.end_of_day.clone(),
             last_quote: self.last_quote.clone(),
+            reference_data: self.reference_data.clone(),
         };
         let currencies_props = QuotesProps {
             title: "Мировые валюты".to_owned(),
             component_type: QuotesComponentType::BidAsk,
+            quote_type: QuoteType::Currency,
             symbols: self.currencies_symbols.clone(),
             prices: self.get_quote_data(QuoteType::Currency),
             end_of_day: self.end_of_day.clone(),
             last_quote: self.last_quote.clone(),
+            reference_data: self.reference_data.clone(),
         };
         let indices_stock_props = QuotesProps {
             title: "Индексы".to_owned(),
             component_type: QuotesComponentType::OnlyPrice,
+            quote_type: QuoteType::Indices,
             symbols: self.indices_symbols.clone(),
             prices: self.get_quote_data(QuoteType::Indices),
             end_of_day: self.end_of_day.clone(),
             last_quote: self.last_quote.clone(),
+            reference_data: self.reference_data.clone(),
         };
         let us_stock_props = QuotesProps {
             title: "Акции".to_owned(),
             component_type: QuotesComponentType::OnlyPrice,
+            quote_type: QuoteType::USStocks,
             symbols: self.us_stocks_symbols.clone(),
             prices: self.get_quote_data(QuoteType::USStocks),
             end_of_day: self.end_of_day.clone(),
             last_quote: self.last_quote.clone(),
+            reference_data: self.reference_data.clone(),
         };
         html! {
               <div class="row">
