@@ -1,5 +1,3 @@
-use std::rc::Rc;
-
 use yew::platform::spawn_local;
 use yew::prelude::*;
 use yew::suspense::{Suspension, SuspensionHandle, SuspensionResult};
@@ -8,6 +6,7 @@ use crate::common::config::DashboardConfiguration;
 use crate::common::entities::ReferenceData;
 use crate::services::restapi::RestApiService;
 
+/// State for Suspense Component
 #[derive(PartialEq)]
 pub struct LoadDataState {
     suspension: Suspension,
@@ -26,14 +25,7 @@ impl LoadDataState {
     }
 }
 
-impl Reducible for LoadDataState {
-    type Action = ();
-
-    fn reduce(self: Rc<Self>, _action: Self::Action) -> Rc<Self> {
-        Self::new().into()
-    }
-}
-
+/// Loading reference market data
 #[hook]
 pub fn use_load_data() -> SuspensionResult<ReferenceData> {
     let load_data_state = use_state(LoadDataState::new);
@@ -46,7 +38,7 @@ pub fn use_load_data() -> SuspensionResult<ReferenceData> {
     }
 }
 
-pub fn load_data(state: UseStateHandle<LoadDataState>) {
+fn load_data(state: UseStateHandle<LoadDataState>) {
     spawn_local(async move {
         let indices = RestApiService::get_indices().await.unwrap();
         let us_stocks = RestApiService::get_us_stoks().await.unwrap();

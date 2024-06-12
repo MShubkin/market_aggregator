@@ -1,6 +1,25 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+/// Real time price data
+#[derive(PartialEq, Clone, Default, Debug)]
+pub struct RealTimePriceData {
+    ///  Symbol ticker of the instrument
+    pub symbol: String,
+    /// Current price
+    pub price: f64,
+    /// Bid price
+    pub bid: f64,
+    /// Ask price
+    pub ask: f64,
+    /// Price change
+    pub change: f64,
+    /// Price change(percent)
+    pub change_percentage: f64,
+    /// Data acquisition time
+    pub time: String,
+}
+
 /// End of day data
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct EndOfDay {
