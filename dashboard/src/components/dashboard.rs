@@ -8,16 +8,17 @@ use yew::{
 };
 
 use crate::common::config::DashboardConfiguration;
-use crate::common::entities::{PriceMessage, ReferenceData, WSResponseEvent};
+use crate::common::entities::{PriceMessage, RealTimePriceData, ReferenceData, WSResponseEvent};
 use crate::common::enums::{QuoteType, QuotesComponentType, WSResponseEventType};
 use crate::common::error::MarketError;
 use crate::common::utils::format_time;
-use crate::components::quotes::{PriceData, QuotesComponent, QuotesProps};
+use crate::components::quotes::{QuotesComponent, QuotesProps};
 use crate::components::suspense::use_load_data;
 use crate::services::websocket::WebSocketService;
 
 pub type AppContent = WithLoadingData<DashboardComponent>;
 
+/// Function component responsible for loading reference data
 #[function_component]
 pub fn WithLoadingData<Comp>() -> HtmlResult
 where
@@ -31,28 +32,27 @@ where
     )
 }
 
-#[derive(PartialEq, Default)]
-pub struct ReferenceDataState {
-    reference_data: Option<ReferenceData>,
-}
-
+/// Dashboard Component Properties
 #[derive(Debug, PartialEq, Properties)]
 pub struct DashboardComponentProps {
     reference_data: ReferenceData,
 }
 
+/// Dashboard struct Component
 pub struct DashboardComponent {
     crypto_currencies_symbols: Arc<LinkedHashSet<String>>,
     currencies_symbols: Arc<LinkedHashSet<String>>,
     indices_symbols: Arc<LinkedHashSet<String>>,
     us_stocks_symbols: Arc<LinkedHashSet<String>>,
-    prices: Arc<RwLock<HashMap<String, PriceData>>>,
+    prices: Arc<RwLock<HashMap<String, RealTimePriceData>>>,
     reference_data: Arc<ReferenceData>,
 }
-
+/// Dashboard Component Messages
 pub enum DashboardMessage {
+    /// Web socket response message
     WebSocketResponse(String),
-    MarketErrorResponse(MarketError),
+    /// Market error message
+    MarketError(MarketError),
 }
 
 impl Component for DashboardComponent {
@@ -65,8 +65,7 @@ impl Component for DashboardComponent {
             Ok(mut web_socket) => {
                 let success_response_callback =
                     ctx.link().callback(DashboardMessage::WebSocketResponse);
-                let error_response_callback =
-                    ctx.link().callback(DashboardMessage::MarketErrorResponse);
+                let error_response_callback = ctx.link().callback(DashboardMessage::MarketError);
                 let subscribe_result = web_socket.subscribe_real_time_rates(
                     DashboardConfiguration::get_all_quote_symbols(),
                     success_response_callback,
@@ -124,7 +123,7 @@ impl Component for DashboardComponent {
                         let mut lock = self.prices.write().unwrap();
                         lock.insert(
                             price_message.symbol.clone(),
-                            PriceData {
+                            RealTimePriceData {
                                 symbol: price_message.symbol,
                                 price: price_message.price,
                                 bid: price_message.bid,
@@ -142,7 +141,7 @@ impl Component for DashboardComponent {
                     }
                 }
             }
-            DashboardMessage::MarketErrorResponse(error) => {
+            DashboardMessage::MarketError(error) => {
                 info!("MarketErrorResponse response {}", error);
             }
         }
@@ -200,7 +199,7 @@ impl Component for DashboardComponent {
 }
 
 impl DashboardComponent {
-    fn get_quote_data(&self, quote_type: QuoteType) -> HashMap<String, PriceData> {
+    fn get_quote_data(&self, quote_type: QuoteType) -> HashMap<String, RealTimePriceData> {
         let symbols = DashboardConfiguration::get_quote_symbols(quote_type);
         let data = self.prices.read().unwrap();
         let filter_data = data
