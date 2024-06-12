@@ -1,12 +1,12 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use crate::common::entities::{EndOfDay, Quote, ReferenceData};
+use linked_hash_set::LinkedHashSet;
+use yew::{classes, function_component, html, Html, Properties};
+
+use crate::common::entities::ReferenceData;
 use crate::common::enums::{QuoteType, QuotesComponentType};
 use crate::common::utils::{format_time, round_f64, round_f64_str};
-use linked_hash_set::LinkedHashSet;
-use log::info;
-use yew::{classes, function_component, html, Component, Html, Properties};
 
 #[derive(Properties, PartialEq, Clone)]
 pub(crate) struct QuotesProps {
@@ -15,8 +15,6 @@ pub(crate) struct QuotesProps {
     pub(crate) quote_type: QuoteType,
     pub(crate) symbols: Arc<LinkedHashSet<String>>,
     pub(crate) prices: HashMap<String, PriceData>,
-    pub(crate) end_of_day: Arc<HashMap<String, EndOfDay>>,
-    pub(crate) last_quote: Arc<HashMap<String, Quote>>,
     pub(crate) reference_data: Arc<ReferenceData>,
 }
 
@@ -88,21 +86,21 @@ pub(crate) fn QuotesComponent(props: &QuotesProps) -> Html {
                let mut change_percent_classes = vec!["col", "col-6"];
 
                    let mut eod_price:Option<f64> = None;
-                   if let Some(end_of_day) = props.end_of_day.get(symbol){
+                   if let Some(end_of_day) = props.reference_data.end_of_day.get(symbol){
                        let val = round_f64_str(end_of_day.close.clone());
                        eod_price = Some(val);
                    }
 
-                   if let Some(last_quote) = props.last_quote.get(symbol){
+                   if let Some(last_quote) = props.reference_data.last_quote.get(symbol){
                         price_value = round_f64_str(last_quote.close.clone()).to_string();
                         bid_value = round_f64_str(last_quote.close.clone()).to_string();
                         ask_value = round_f64_str(last_quote.close.clone()).to_string();
                         time_value =  format_time(last_quote.timestamp);
 
                         if round_f64_str(last_quote.change.clone()) == 0.00{
-                           change_value = "0.00".to_owned();
-                           percentage_value = "0.00".to_owned();
-                        }else if (round_f64_str(last_quote.change.clone()) > 0.00){
+                           "0.00".clone_into(&mut change_value);
+                           "0.00".clone_into(&mut percentage_value);
+                        }else if round_f64_str(last_quote.change.clone()) > 0.00{
                            change_value = format!("+{}",round_f64_str(last_quote.change.clone()));
                            percentage_value =  format!("+{}",round_f64_str(last_quote.percent_change.clone()));
                            change_classes.push("color-green");
@@ -115,17 +113,17 @@ pub(crate) fn QuotesComponent(props: &QuotesProps) -> Html {
                         }
                    }
 
-                if let Some(price_data) = props.prices.get(symbol).map(|value|value.clone()){
+                if let Some(price_data) = props.prices.get(symbol).cloned(){
                    price_value =  round_f64(price_data.price).to_string();
-                   time_value = price_data.time.clone();
+                   time_value.clone_from(&price_data.time);
                    bid_value =  round_f64(price_data.bid).to_string();
                    ask_value =  round_f64(price_data.ask).to_string();
 
                    if let Some(eod_price) = eod_price{
                        let change = price_data.price - eod_price;
                        if change == 0.00{
-                           change_value = "0.00".to_owned();
-                           percentage_value = "0.00".to_owned();
+                           "0.00".clone_into(&mut change_value);
+                           "0.00".clone_into(&mut percentage_value);
                        }else if change > 0.00{
                            change_value = format!("+{}",round_f64(change));
                            let perc = (change/eod_price)*100.00;
@@ -170,16 +168,14 @@ fn get_symbol_name(
         QuoteType::Indices => {
             if let Some(indice) = reference_data.indices.get(symbol) {
                 indice.name.clone()
-            }
-            else {
+            } else {
                 symbol.clone()
             }
         }
         QuoteType::USStocks => {
             if let Some(indice) = reference_data.us_stocks.get(symbol) {
                 indice.name.clone()
-            }
-            else {
+            } else {
                 symbol.clone()
             }
         }

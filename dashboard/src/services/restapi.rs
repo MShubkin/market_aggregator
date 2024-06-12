@@ -1,11 +1,15 @@
 use std::collections::{HashMap, HashSet};
 
-use crate::common::entities::{EndOfDay, Indices, IndicesReferenceData, Quote, Stock, UsStocksReferenceData};
 use gloo_net::http::Request;
 use log::debug;
-use serde::{Deserialize, Serialize};
 
-use crate::common::env::{MARKET_API_KEY, MARKET_EOD_ROUTE, MARKET_INDICES_ROUTE, MARKET_QUOTE_ROUTE, MARKET_REST_ADDRESS, MARKET_STOCKS_ROUTE};
+use crate::common::entities::{
+    EndOfDay, Indices, IndicesReferenceData, Quote, Stock, UsStocksReferenceData,
+};
+use crate::common::env::{
+    MARKET_API_KEY, MARKET_EOD_ROUTE, MARKET_INDICES_ROUTE, MARKET_QUOTE_ROUTE,
+    MARKET_REST_ADDRESS, MARKET_STOCKS_ROUTE,
+};
 use crate::common::utils::prepare_symbols_for_url;
 use crate::common::MarketResult;
 
@@ -59,8 +63,11 @@ impl RestApiService {
     }
 
     pub async fn get_us_stoks() -> MarketResult<HashMap<String, Stock>> {
-        let url = format!("{}{}?country=United%20States", MARKET_REST_ADDRESS, MARKET_STOCKS_ROUTE);
-        debug!("get_indices. url = {}", url);
+        let url = format!(
+            "{}{}?country=United%20States",
+            MARKET_REST_ADDRESS, MARKET_STOCKS_ROUTE
+        );
+        debug!("get_us_stoks. url = {}", url);
         let response = Request::get(url.as_str()).send().await?;
         let response_text = response.text().await?;
         let data: UsStocksReferenceData = serde_json::from_str(response_text.as_str())?;

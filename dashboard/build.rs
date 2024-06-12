@@ -6,7 +6,7 @@ use std::io::Write;
 fn main() {
     println!("cargo:rerun-if-changed=.env");
     let dest_path = "./src/common/env.rs";
-    let mut f = File::create(&dest_path).unwrap();
+    let mut f = File::create(dest_path).unwrap();
 
     // use the dotenv crate to get the .env values
     dotenv().unwrap();
@@ -15,9 +15,9 @@ fn main() {
     for (key, value) in env::vars() {
         if key.starts_with("MARKET_") {
             let line = format!(
-                "pub const {}: &'static str = \"{}\";\n",
+                "pub const {}: &str = \"{}\";\n",
                 key,
-                value.replace("\"", "\\\"")
+                value.replace('"', "\\\"")
             );
             f.write_all(line.as_bytes()).unwrap();
         }

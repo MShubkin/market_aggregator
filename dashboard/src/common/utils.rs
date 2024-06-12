@@ -5,7 +5,7 @@ use chrono::{DateTime, FixedOffset, Utc};
 
 pub fn format_time(timestamp: i64) -> String {
     let d = UNIX_EPOCH + Duration::from_secs(timestamp as u64);
-    let mut datetime = DateTime::<Utc>::from(d);
+    let datetime = DateTime::<Utc>::from(d);
     let datetime_offset = datetime.with_timezone(&FixedOffset::east_opt(3 * 3600).unwrap());
     datetime_offset.format("%H:%M:%S").to_string()
 }
@@ -13,7 +13,7 @@ pub fn format_time(timestamp: i64) -> String {
 pub fn prepare_symbols_for_url(symbols: HashSet<String>) -> String {
     symbols.iter().fold("".to_owned(), |mut acc, x| {
         if !acc.is_empty() {
-            acc.push_str(",")
+            acc.push(',')
         };
         acc.push_str(x);
         acc

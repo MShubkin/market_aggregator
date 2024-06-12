@@ -1,5 +1,3 @@
-use yew::Properties;
-
 #[derive(PartialEq, Clone)]
 pub enum QuoteType {
     CryptoCurrency,
@@ -8,13 +6,27 @@ pub enum QuoteType {
     USStocks,
 }
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Default)]
 pub enum QuotesComponentType {
+    #[default]
     BidAsk,
     OnlyPrice,
 }
-impl Default for QuotesComponentType {
-    fn default() -> Self {
-        QuotesComponentType::BidAsk
+
+pub enum WSResponseEventType {
+    SubscribeStatus,
+    Price,
+    Heartbeat,
+    Unknown,
+}
+
+impl From<String> for WSResponseEventType {
+    fn from(value: String) -> Self {
+        match value.as_str() {
+            "price" => WSResponseEventType::Price,
+            "heartbeat" => WSResponseEventType::Heartbeat,
+            "subscribe-status" => WSResponseEventType::SubscribeStatus,
+            _ => WSResponseEventType::Unknown,
+        }
     }
 }

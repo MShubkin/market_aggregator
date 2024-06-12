@@ -1,5 +1,4 @@
 use crate::common::error::MarketError;
-use std::fmt::Display;
 
 pub mod config;
 pub mod enums;

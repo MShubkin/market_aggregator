@@ -135,19 +135,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "06ea2b9bc92be3c2baa9334a323ebca2d6f074ff852cd1d7b11064035cd3868f"
 
 [[package]]
-name = "counter"
-version = "0.1.1"
-dependencies = [
- "futures",
- "gloo 0.10.0",
- "gloo-net 0.5.0",
- "js-sys",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "yew",
-]
-
-[[package]]
 name = "dashboard"
 version = "0.1.1"
 dependencies = [

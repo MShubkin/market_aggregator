@@ -1,36 +1,20 @@
-use std::collections::{HashMap, HashSet};
-use std::rc::Rc;
+use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
-use chrono::{DateTime, FixedOffset, NaiveDateTime, Utc};
-use futures::{SinkExt, StreamExt};
-use gloo::console;
-use gloo_net::websocket::futures::WebSocket;
-use gloo_net::websocket::Message;
 use linked_hash_set::LinkedHashSet;
 use log::{error, info};
-use wasm_bindgen_futures::spawn_local;
-use wasm_logger::init;
-use yew::platform::time::sleep;
-use yew::suspense::{Suspension, SuspensionResult};
 use yew::{
-    function_component, hook, html, use_effect_with_deps, use_state, AttrValue, BaseComponent,
-    Component, Context, Html, HtmlResult, Properties, Reducible, UseStateHandle,
+    function_component, html, BaseComponent, Component, Context, Html, HtmlResult, Properties,
 };
 
 use crate::common::config::DashboardConfiguration;
-use crate::common::entities::{EndOfDay, Quote, ReferenceData};
-use crate::common::enums::{QuoteType, QuotesComponentType};
+use crate::common::entities::{PriceMessage, ReferenceData, WSResponseEvent};
+use crate::common::enums::{QuoteType, QuotesComponentType, WSResponseEventType};
 use crate::common::error::MarketError;
 use crate::common::utils::format_time;
-use crate::common::MarketResult;
 use crate::components::quotes::{PriceData, QuotesComponent, QuotesProps};
 use crate::components::suspense::use_load_data;
-use crate::services::restapi::RestApiService;
-use crate::services::websocket::{
-    PriceMessage, WSResponseEvent, WSResponseEventType, WebSocketService,
-};
+use crate::services::websocket::WebSocketService;
 
 pub type AppContent = WithLoadingData<DashboardComponent>;
 
@@ -63,14 +47,10 @@ pub struct DashboardComponent {
     indices_symbols: Arc<LinkedHashSet<String>>,
     us_stocks_symbols: Arc<LinkedHashSet<String>>,
     prices: Arc<RwLock<HashMap<String, PriceData>>>,
-    end_of_day: Arc<HashMap<String, EndOfDay>>,
-    last_quote: Arc<HashMap<String, Quote>>,
     reference_data: Arc<ReferenceData>,
 }
 
 pub enum DashboardMessage {
-    EndOfDayResponse(HashMap<String, EndOfDay>),
-    LastQuoteResponse(HashMap<String, Quote>),
     WebSocketResponse(String),
     MarketErrorResponse(MarketError),
 }
@@ -80,37 +60,36 @@ impl Component for DashboardComponent {
     type Properties = DashboardComponentProps;
 
     fn create(ctx: &Context<Self>) -> Self {
-        ctx.link().send_future(async {
-            match RestApiService::get_end_of_day_data(
-                DashboardConfiguration::get_all_quote_symbols(),
-            )
-            .await
-            {
-                Ok(data) => DashboardMessage::EndOfDayResponse(data),
-                Err(err) => DashboardMessage::MarketErrorResponse(err),
-            }
-        });
-
-        ctx.link().send_future(async {
-            match RestApiService::get_last_quote(DashboardConfiguration::get_all_quote_symbols())
-                .await
-            {
-                Ok(data) => DashboardMessage::LastQuoteResponse(data),
-                Err(err) => DashboardMessage::MarketErrorResponse(err),
-            }
-        });
-
-        let ws_soket_result = WebSocketService::open_ws_connection();
-        match ws_soket_result {
+        let ws_soket_connection_result = WebSocketService::open_ws_connection();
+        match ws_soket_connection_result {
             Ok(mut web_socket) => {
-                let response_callback = ctx.link().callback(DashboardMessage::WebSocketResponse);
-                web_socket
-                    .subscribe_real_time_rates(
-                        DashboardConfiguration::get_all_quote_symbols(),
-                        response_callback,
-                    )
-                    .expect("cannot subscribe to real time rates");
-                web_socket.heartbeat().expect("heartbeat error");
+                let success_response_callback =
+                    ctx.link().callback(DashboardMessage::WebSocketResponse);
+                let error_response_callback =
+                    ctx.link().callback(DashboardMessage::MarketErrorResponse);
+                let subscribe_result = web_socket.subscribe_real_time_rates(
+                    DashboardConfiguration::get_all_quote_symbols(),
+                    success_response_callback,
+                    error_response_callback.clone(),
+                );
+                match subscribe_result {
+                    Ok(_) => {
+                        info!("Web socket subscribe Success");
+                    }
+                    Err(error) => {
+                        error!("Web socket subscribe Error: {:?}", error);
+                    }
+                }
+
+                let heartbeat_result = web_socket.heartbeat(error_response_callback.clone());
+                match heartbeat_result {
+                    Ok(()) => {
+                        info!("Web socket heartbeat Success");
+                    }
+                    Err(error) => {
+                        error!("Web socket heartbeat Error: {:?}", error);
+                    }
+                }
             }
             Err(error) => {
                 error!("Web socket connection Error: {:?}", error);
@@ -124,13 +103,11 @@ impl Component for DashboardComponent {
             indices_symbols: Arc::new(DashboardConfiguration::get_indices_symbols()),
             us_stocks_symbols: Arc::new(DashboardConfiguration::get_us_stocks()),
             prices: Arc::new(RwLock::new(HashMap::new())),
-            end_of_day: Default::default(),
-            last_quote: Arc::new(Default::default()),
             reference_data: Arc::new(ctx.props().reference_data.clone()),
         }
     }
 
-    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+    fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             DashboardMessage::WebSocketResponse(data) => {
                 let response_event: WSResponseEvent =
@@ -142,7 +119,7 @@ impl Component for DashboardComponent {
                     }
                     WSResponseEventType::Price => {
                         let price_message: PriceMessage =
-                            serde_json::from_str(data.as_str()).unwrap_or_default();
+                            serde_json::from_str(data.as_str()).unwrap();
                         info!("price_message {:?}", price_message);
                         let mut lock = self.prices.write().unwrap();
                         lock.insert(
@@ -165,14 +142,6 @@ impl Component for DashboardComponent {
                     }
                 }
             }
-
-            DashboardMessage::EndOfDayResponse(data) => {
-                self.end_of_day = Arc::new(data);
-                return false;
-            }
-            DashboardMessage::LastQuoteResponse(data) => {
-                self.last_quote = Arc::new(data);
-            }
             DashboardMessage::MarketErrorResponse(error) => {
                 info!("MarketErrorResponse response {}", error);
             }
@@ -180,15 +149,13 @@ impl Component for DashboardComponent {
         true
     }
 
-    fn view(&self, ctx: &Context<Self>) -> Html {
+    fn view(&self, _ctx: &Context<Self>) -> Html {
         let crypto_currencies_props = QuotesProps {
             title: "Крипто-валюты".to_owned(),
             component_type: QuotesComponentType::BidAsk,
             quote_type: QuoteType::CryptoCurrency,
             symbols: self.crypto_currencies_symbols.clone(),
             prices: self.get_quote_data(QuoteType::CryptoCurrency),
-            end_of_day: self.end_of_day.clone(),
-            last_quote: self.last_quote.clone(),
             reference_data: self.reference_data.clone(),
         };
         let currencies_props = QuotesProps {
@@ -197,8 +164,6 @@ impl Component for DashboardComponent {
             quote_type: QuoteType::Currency,
             symbols: self.currencies_symbols.clone(),
             prices: self.get_quote_data(QuoteType::Currency),
-            end_of_day: self.end_of_day.clone(),
-            last_quote: self.last_quote.clone(),
             reference_data: self.reference_data.clone(),
         };
         let indices_stock_props = QuotesProps {
@@ -207,8 +172,6 @@ impl Component for DashboardComponent {
             quote_type: QuoteType::Indices,
             symbols: self.indices_symbols.clone(),
             prices: self.get_quote_data(QuoteType::Indices),
-            end_of_day: self.end_of_day.clone(),
-            last_quote: self.last_quote.clone(),
             reference_data: self.reference_data.clone(),
         };
         let us_stock_props = QuotesProps {
@@ -217,8 +180,6 @@ impl Component for DashboardComponent {
             quote_type: QuoteType::USStocks,
             symbols: self.us_stocks_symbols.clone(),
             prices: self.get_quote_data(QuoteType::USStocks),
-            end_of_day: self.end_of_day.clone(),
-            last_quote: self.last_quote.clone(),
             reference_data: self.reference_data.clone(),
         };
         html! {

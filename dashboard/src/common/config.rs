@@ -85,7 +85,6 @@ impl DashboardConfiguration {
             Self::get_indices_symbols(),
             Self::get_us_stocks(),
         ];
-        let combined = all.into_iter().flatten().collect::<HashSet<_>>();
-        combined
+        all.into_iter().flatten().collect::<HashSet<_>>()
     }
 }
