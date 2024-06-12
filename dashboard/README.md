@@ -1,12 +1,10 @@
-# Counter Example
+# market Aggregator Application
 
-[![Demo](https://img.shields.io/website?label=demo&url=https%3A%2F%2Fexamples.yew.rs%2Fcounter)](https://examples.yew.rs/counter)
-
-A simple example of a counter which can be increased or decreased with the press of a button.
+An example of Market Data Aggregator
 
 ## Concepts
 
-Demonstrates the use of messages to update state.
+Demonstrates the use of Yew framework.
 
 ## Running
 

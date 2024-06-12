@@ -1,5 +1,6 @@
 [package]
 name = "dashboard"
+description = "Market Data Aggregator"
 version = "0.1.1"
 authors = ["Maksim Shubkin <mmshubkin@gmail.com>"]
 edition = "2021"
