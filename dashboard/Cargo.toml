@@ -5,6 +5,9 @@ version = "0.1.1"
 authors = ["Maksim Shubkin <mmshubkin@gmail.com>"]
 edition = "2021"
 license = "MIT OR Apache-2.0"
+readme = "README.md"
+homepage = "http://homepage.com"
+repository = "https://github.com/MShubkin/market_aggregator"
 
 [dependencies]
 gloo = "0.10"
