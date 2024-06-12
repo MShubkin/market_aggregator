@@ -1,3 +1,4 @@
+/// Quote Type
 #[derive(PartialEq, Clone)]
 pub enum QuoteType {
     CryptoCurrency,
@@ -5,14 +6,14 @@ pub enum QuoteType {
     Indices,
     USStocks,
 }
-
+/// Quotes Component Type
 #[derive(PartialEq, Clone, Debug, Default)]
 pub enum QuotesComponentType {
     #[default]
     BidAsk,
     OnlyPrice,
 }
-
+/// Web socket response event type
 pub enum WSResponseEventType {
     SubscribeStatus,
     Price,

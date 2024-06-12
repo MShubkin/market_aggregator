@@ -4,9 +4,11 @@ use linked_hash_set::LinkedHashSet;
 
 use crate::common::enums::QuoteType;
 
+/// Dashboard Display Configuration.
 pub struct DashboardConfiguration;
 
 impl DashboardConfiguration {
+    /// Cryptocurrency Block
     pub fn get_crypto_currencies_symbols() -> LinkedHashSet<String> {
         let mut s = LinkedHashSet::new();
         s.insert("EOS/USD".to_owned());
@@ -16,7 +18,7 @@ impl DashboardConfiguration {
         s.insert("ETH/BTC".to_owned());
         s
     }
-
+    /// Currency Block
     pub fn get_currencies_symbols() -> LinkedHashSet<String> {
         let mut s = LinkedHashSet::new();
         s.insert("EUR/USD".to_owned());
@@ -26,7 +28,7 @@ impl DashboardConfiguration {
         s.insert("GBP/CHF".to_owned());
         s
     }
-
+    /// Indices Block
     pub fn get_indices_symbols() -> LinkedHashSet<String> {
         let mut s = LinkedHashSet::new();
         s.insert("DJIA".to_owned());
@@ -45,7 +47,7 @@ impl DashboardConfiguration {
         s.insert("RUT".to_owned()); //Russell 2000 Index
         s
     }
-
+    /// US Stock Block
     pub fn get_us_stocks() -> LinkedHashSet<String> {
         let mut s = LinkedHashSet::new();
         s.insert("MSFT".to_owned());
@@ -70,6 +72,7 @@ impl DashboardConfiguration {
         s.insert("PG".to_owned());
         s
     }
+    /// Getting list of quote symbols by quote type
     pub fn get_quote_symbols(quote_type: QuoteType) -> LinkedHashSet<String> {
         match quote_type {
             QuoteType::CryptoCurrency => Self::get_crypto_currencies_symbols(),
@@ -78,6 +81,7 @@ impl DashboardConfiguration {
             QuoteType::USStocks => Self::get_us_stocks(),
         }
     }
+    /// Getting all quote symbols
     pub fn get_all_quote_symbols() -> HashSet<String> {
         let all = [
             Self::get_crypto_currencies_symbols(),

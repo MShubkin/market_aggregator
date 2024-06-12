@@ -13,9 +13,11 @@ use crate::common::env::{
 use crate::common::utils::prepare_symbols_for_url;
 use crate::common::MarketResult;
 
+/// Twelve Data Rest Api Client
 pub struct RestApiService;
 
 impl RestApiService {
+    /// Fetching the latest End of Day (EOD) price of an instrument
     pub async fn get_end_of_day_data(
         symbols: HashSet<String>,
     ) -> MarketResult<HashMap<String, EndOfDay>> {
@@ -32,7 +34,7 @@ impl RestApiService {
         let data: HashMap<String, EndOfDay> = serde_json::from_str(response_text.as_str())?;
         Ok(data)
     }
-
+    /// Fetching the latest quote of the selected instrument
     pub async fn get_last_quote(symbols: HashSet<String>) -> MarketResult<HashMap<String, Quote>> {
         let url = format!(
             "{}{}?symbol={}&interval=1day&apikey={}",
@@ -47,7 +49,7 @@ impl RestApiService {
         let data: HashMap<String, Quote> = serde_json::from_str(response_text.as_str())?;
         Ok(data)
     }
-
+    /// This function return array of indices available at Twelve Data API.
     pub async fn get_indices() -> MarketResult<HashMap<String, Indices>> {
         let url = format!("{}{}", MARKET_REST_ADDRESS, MARKET_INDICES_ROUTE);
         debug!("get_indices. url = {}", url);
@@ -61,7 +63,7 @@ impl RestApiService {
             .collect();
         Ok(data)
     }
-
+    /// This function return array of US stocks available at Twelve Data API.
     pub async fn get_us_stoks() -> MarketResult<HashMap<String, Stock>> {
         let url = format!(
             "{}{}?country=United%20States",

@@ -2,6 +2,7 @@ use derive_more::From;
 use gloo::utils::errors::JsError;
 use thiserror::Error;
 
+/// Common Application Error
 #[derive(Debug, Error, From)]
 pub enum MarketError {
     #[error("General error: {0}")]

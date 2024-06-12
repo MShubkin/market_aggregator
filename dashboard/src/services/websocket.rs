@@ -17,13 +17,14 @@ use crate::common::utils::prepare_symbols_for_url;
 use crate::common::MarketResult;
 
 const NINE_SEC: Duration = Duration::from_secs(9);
-
+/// Twelve Data Web Socket Client
 pub struct WebSocketService {
     web_socket_writer: Rc<Mutex<SplitSink<WebSocket, Message>>>,
     web_socket_reader: Rc<Mutex<SplitStream<WebSocket>>>,
 }
 
 impl WebSocketService {
+    /// Opening web socket connection
     pub fn open_ws_connection() -> MarketResult<Self> {
         let web_socket = WebSocket::open(
             format!(
@@ -40,7 +41,7 @@ impl WebSocketService {
             web_socket_reader: Rc::new(Mutex::new(web_socket_reader)),
         })
     }
-
+    /// This function subscribes and gets real-time price streaming from the exchange.
     pub fn subscribe_real_time_rates(
         &mut self,
         symbols: HashSet<String>,
@@ -88,7 +89,7 @@ impl WebSocketService {
         });
         Ok(())
     }
-
+    /// Sending "heartbeat" events to the server every 9 seconds. This will make sure to keep the connection stable
     pub fn heartbeat(&mut self, error_callback: Callback<MarketError>) -> MarketResult<()> {
         let msg = "{{
                 \"action\": \"heartbeat\"
