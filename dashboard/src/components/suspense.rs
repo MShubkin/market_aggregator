@@ -1,3 +1,4 @@
+use futures::join;
 use yew::platform::spawn_local;
 use yew::prelude::*;
 use yew::suspense::{Suspension, SuspensionHandle, SuspensionResult};
@@ -40,25 +41,24 @@ pub fn use_load_data() -> SuspensionResult<ReferenceData> {
 
 fn load_data(state: UseStateHandle<LoadDataState>) {
     spawn_local(async move {
-        let indices = RestApiService::get_indices().await.unwrap();
-        let us_stocks = RestApiService::get_us_stoks().await.unwrap();
+        let indices = RestApiService::get_indices();
+        let us_stocks = RestApiService::get_us_stoks();
         let end_of_day =
-            RestApiService::get_end_of_day_data(DashboardConfiguration::get_all_quote_symbols())
-                .await
-                .unwrap();
+            RestApiService::get_end_of_day_data(DashboardConfiguration::get_all_quote_symbols());
         let last_quote =
-            RestApiService::get_last_quote(DashboardConfiguration::get_all_quote_symbols())
-                .await
-                .unwrap();
+            RestApiService::get_last_quote(DashboardConfiguration::get_all_quote_symbols());
+
+        let (indices, us_stocks, end_of_day, last_quote) =
+            join!(indices, us_stocks, end_of_day, last_quote);
 
         state.set(LoadDataState {
             suspension: state.suspension.clone(),
             handle: None, //drop handler and resume render
             reference_data: ReferenceData {
-                indices,
-                us_stocks,
-                end_of_day,
-                last_quote,
+                indices: indices.unwrap(),
+                us_stocks: us_stocks.unwrap(),
+                end_of_day: end_of_day.unwrap(),
+                last_quote: last_quote.unwrap(),
             },
         });
     });
