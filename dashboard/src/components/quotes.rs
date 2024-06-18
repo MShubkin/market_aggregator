@@ -93,8 +93,17 @@ fn fill_current_quote(
     if let Some(price_data) = props.prices.get(symbol).cloned() {
         display_price_data.price_value = round_f64(price_data.price).to_string();
         display_price_data.time_value.clone_from(&price_data.time);
-        display_price_data.bid_value = round_f64(price_data.bid).to_string();
-        display_price_data.ask_value = round_f64(price_data.ask).to_string();
+
+        if price_data.bid == 0.00 {
+            display_price_data.bid_value = round_f64(price_data.price).to_string();
+        } else {
+            display_price_data.bid_value = round_f64(price_data.bid).to_string();
+        }
+        if price_data.ask == 0.00 {
+            display_price_data.ask_value = round_f64(price_data.price).to_string();
+        } else {
+            display_price_data.ask_value = round_f64(price_data.ask).to_string();
+        }
         if let Some(eod_price) = eod_price {
             let change = price_data.price - eod_price;
             if change == 0.00 {
