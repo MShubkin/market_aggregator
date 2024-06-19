@@ -42,9 +42,6 @@ impl DashboardConfiguration {
         s.insert("UKX".to_owned()); //FTSE100
         s.insert("FCHI".to_owned()); //CAC40
         s.insert("DAX".to_owned());
-        s.insert("N225".to_owned()); //Nikkei 225
-        s.insert("AXJO".to_owned()); //ASX 200
-        s.insert("RUT".to_owned()); //Russell 2000 Index
         s
     }
     /// US Stock Block
@@ -56,20 +53,11 @@ impl DashboardConfiguration {
         s.insert("GOOGL".to_owned());
         s.insert("AMZN".to_owned());
         s.insert("META".to_owned());
-        s.insert("BRK.B".to_owned());
-        s.insert("BRK.A".to_owned());
-        s.insert("LLY".to_owned());
-        s.insert("TSM".to_owned());
         s.insert("AVGO".to_owned());
-        s.insert("NVO".to_owned());
         s.insert("JPM".to_owned());
         s.insert("TSLA".to_owned());
         s.insert("WMT".to_owned());
         s.insert("XOM".to_owned());
-        s.insert("UNH".to_owned());
-        s.insert("MA".to_owned());
-        s.insert("ASML".to_owned());
-        s.insert("PG".to_owned());
         s
     }
     /// Getting list of quote symbols by quote type
