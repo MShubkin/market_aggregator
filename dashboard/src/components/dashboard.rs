@@ -117,21 +117,27 @@ impl Component for DashboardComponent {
                         info!("subscribe status {:?}", data);
                     }
                     WSResponseEventType::Price => {
-                        let price_message: PriceMessage =
-                            serde_json::from_str(data.as_str()).unwrap();
-                        info!("price_message {:?}", price_message);
-                        let mut lock = self.prices.write().unwrap();
-                        lock.insert(
-                            price_message.symbol.clone(),
-                            RealTimePriceData {
-                                symbol: price_message.symbol,
-                                price: price_message.price,
-                                bid: price_message.bid,
-                                ask: price_message.ask,
-                                time: format_time(price_message.timestamp),
-                                ..Default::default()
-                            },
-                        );
+                        match serde_json::from_str::<PriceMessage>(data.as_str()) {
+                            Ok(price_message) => {
+                                info!("price_message {:?}", price_message);
+                                if let Ok(mut lock) = self.prices.write() {
+                                    lock.insert(
+                                        price_message.symbol.clone(),
+                                        RealTimePriceData {
+                                            symbol: price_message.symbol,
+                                            price: price_message.price,
+                                            bid: price_message.bid,
+                                            ask: price_message.ask,
+                                            time: format_time(price_message.timestamp),
+                                            ..Default::default()
+                                        },
+                                    );
+                                }
+                            }
+                            Err(e) => {
+                                error!("Failed to parse price message: {}", e);
+                            }
+                        }
                     }
                     WSResponseEventType::Heartbeat => {
                         info!("heart beat status {:?}", data);
@@ -142,7 +148,7 @@ impl Component for DashboardComponent {
                 }
             }
             DashboardMessage::MarketError(error) => {
-                info!("MarketErrorResponse response {}", error);
+                error!("MarketErrorResponse: {}", error);
             }
         }
         true
@@ -201,7 +207,10 @@ impl Component for DashboardComponent {
 impl DashboardComponent {
     fn get_quote_data(&self, quote_type: QuoteType) -> HashMap<String, RealTimePriceData> {
         let symbols = DashboardConfiguration::get_quote_symbols(quote_type);
-        let data = self.prices.read().unwrap();
+        let data = match self.prices.read() {
+            Ok(data) => data,
+            Err(_) => return HashMap::new(),
+        };
         let filter_data = data
             .iter()
             .filter(|value| symbols.contains(value.0))

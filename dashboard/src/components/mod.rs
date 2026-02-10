@@ -1,6 +1,6 @@
 /// Dashboard Component
 pub mod dashboard;
-/// Qoute Component
+/// Quote Component
 pub mod quotes;
 /// Suspense Component
 pub mod suspense;

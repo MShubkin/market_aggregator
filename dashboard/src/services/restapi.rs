@@ -64,12 +64,12 @@ impl RestApiService {
         Ok(data)
     }
     /// This function return array of US stocks available at Twelve Data API.
-    pub async fn get_us_stoks() -> MarketResult<HashMap<String, Stock>> {
+    pub async fn get_us_stocks() -> MarketResult<HashMap<String, Stock>> {
         let url = format!(
             "{}{}?country=United%20States",
             MARKET_REST_ADDRESS, MARKET_STOCKS_ROUTE
         );
-        debug!("get_us_stoks. url = {}", url);
+        debug!("get_us_stocks. url = {}", url);
         let response = Request::get(url.as_str()).send().await?;
         let response_text = response.text().await?;
         let data: UsStocksReferenceData = serde_json::from_str(response_text.as_str())?;

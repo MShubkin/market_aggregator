@@ -1,1 +1,5 @@
 /target
+/dashboard/dist/
+/dashboard/src/common/env.rs
+.env
+.idea/

@@ -42,7 +42,7 @@ pub fn use_load_data() -> SuspensionResult<ReferenceData> {
 fn load_data(state: UseStateHandle<LoadDataState>) {
     spawn_local(async move {
         let indices = RestApiService::get_indices();
-        let us_stocks = RestApiService::get_us_stoks();
+        let us_stocks = RestApiService::get_us_stocks();
         let end_of_day =
             RestApiService::get_end_of_day_data(DashboardConfiguration::get_all_quote_symbols());
         let last_quote =
@@ -51,15 +51,23 @@ fn load_data(state: UseStateHandle<LoadDataState>) {
         let (indices, us_stocks, end_of_day, last_quote) =
             join!(indices, us_stocks, end_of_day, last_quote);
 
+        let reference_data = match (indices, us_stocks, end_of_day, last_quote) {
+            (Ok(indices), Ok(us_stocks), Ok(end_of_day), Ok(last_quote)) => ReferenceData {
+                indices,
+                us_stocks,
+                end_of_day,
+                last_quote,
+            },
+            _ => {
+                log::error!("Failed to load reference data");
+                ReferenceData::default()
+            }
+        };
+
         state.set(LoadDataState {
             suspension: state.suspension.clone(),
             handle: None, //drop handler and resume render
-            reference_data: ReferenceData {
-                indices: indices.unwrap(),
-                us_stocks: us_stocks.unwrap(),
-                end_of_day: end_of_day.unwrap(),
-                last_quote: last_quote.unwrap(),
-            },
+            reference_data,
         });
     });
 }
