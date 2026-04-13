@@ -132,23 +132,23 @@ fn fill_last_quote(price_data: &mut DisplayPriceData, symbol: &String, props: &Q
     let mut change_classes = vec!["col", "col-5"];
     let mut change_percent_classes = vec!["col", "col-6"];
     if let Some(last_quote) = props.reference_data.last_quote.get(symbol) {
-        price_data.price_value = round_f64_str(last_quote.close.clone()).to_string();
-        price_data.bid_value = round_f64_str(last_quote.close.clone()).to_string();
-        price_data.ask_value = round_f64_str(last_quote.close.clone()).to_string();
+        price_data.price_value = round_f64_str(&last_quote.close).to_string();
+        price_data.bid_value = round_f64_str(&last_quote.close).to_string();
+        price_data.ask_value = round_f64_str(&last_quote.close).to_string();
         price_data.time_value = format_time(last_quote.timestamp);
-        if round_f64_str(last_quote.change.clone()) == 0.00 {
+        let change = round_f64_str(&last_quote.change);
+        let percent_change = round_f64_str(&last_quote.percent_change);
+        if change == 0.00 {
             "0.00".clone_into(&mut price_data.change_value);
             "0.00".clone_into(&mut price_data.percentage_value);
-        } else if round_f64_str(last_quote.change.clone()) > 0.00 {
-            price_data.change_value = format!("+{}", round_f64_str(last_quote.change.clone()));
-            price_data.percentage_value =
-                format!("+{}", round_f64_str(last_quote.percent_change.clone()));
+        } else if change > 0.00 {
+            price_data.change_value = format!("+{change}");
+            price_data.percentage_value = format!("+{percent_change}");
             change_classes.push("color-green");
             change_percent_classes.push("color-green");
         } else {
-            price_data.change_value = format!("{}", round_f64_str(last_quote.change.clone()));
-            price_data.percentage_value =
-                format!("{}", round_f64_str(last_quote.percent_change.clone()));
+            price_data.change_value = format!("{change}");
+            price_data.percentage_value = format!("{percent_change}");
             change_classes.push("color-red");
             change_percent_classes.push("color-red");
         }
@@ -160,7 +160,7 @@ fn fill_last_quote(price_data: &mut DisplayPriceData, symbol: &String, props: &Q
 fn get_eod_price(symbol: &String, props: &QuotesProps) -> Option<f64> {
     let mut eod_price: Option<f64> = None;
     if let Some(end_of_day) = props.reference_data.end_of_day.get(symbol) {
-        let val = round_f64_str(end_of_day.close.clone());
+        let val = round_f64_str(&end_of_day.close);
         eod_price = Some(val);
     }
     eod_price

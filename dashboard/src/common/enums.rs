@@ -14,6 +14,7 @@ pub enum QuotesComponentType {
     OnlyPrice,
 }
 /// Web socket response event type
+#[derive(Debug)]
 pub enum WSResponseEventType {
     SubscribeStatus,
     Price,

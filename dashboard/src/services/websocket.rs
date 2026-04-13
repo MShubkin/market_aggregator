@@ -63,7 +63,7 @@ impl WebSocketService {
         let error_callback = error_response_callback.clone();
         spawn_local(async move {
             let mut writer = writer.lock().await;
-            let result = writer.send(Message::Text(msg.to_string())).await;
+            let result = writer.send(Message::Text(msg)).await;
             if let Err(error) = result {
                 error_callback.emit(MarketError::WebSocketError(error))
             }
@@ -91,18 +91,17 @@ impl WebSocketService {
     }
     /// Sending "heartbeat" events to the server every 9 seconds. This will make sure to keep the connection stable
     pub fn heartbeat(&mut self, error_callback: Callback<MarketError>) -> MarketResult<()> {
-        let msg = "{{
-                \"action\": \"heartbeat\"
-        }}"
-        .to_string();
+        let msg = r#"{"action": "heartbeat"}"#.to_string();
         let writer = self.web_socket_writer.clone();
         spawn_local(async move {
             loop {
-                let mut writer = writer.lock().await;
-                let result = writer.send(Message::Text(msg.to_string())).await;
-                if let Err(error) = result {
-                    error_callback.emit(MarketError::WebSocketError(error))
-                }
+                {
+                    let mut writer = writer.lock().await;
+                    let result = writer.send(Message::Text(msg.clone())).await;
+                    if let Err(error) = result {
+                        error_callback.emit(MarketError::WebSocketError(error));
+                    }
+                } // lock released before sleep
                 sleep(NINE_SEC).await;
             }
         });

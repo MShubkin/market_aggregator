@@ -30,11 +30,15 @@ impl LoadDataState {
 #[hook]
 pub fn use_load_data() -> SuspensionResult<ReferenceData> {
     let load_data_state = use_state(LoadDataState::new);
+    let loading_started = use_mut_ref(|| false);
+
     if load_data_state.suspension.resumed() {
         Ok(load_data_state.reference_data.clone())
     } else {
-        let state = load_data_state.clone();
-        load_data(state);
+        if !*loading_started.borrow() {
+            *loading_started.borrow_mut() = true;
+            load_data(load_data_state.clone());
+        }
         Err(load_data_state.suspension.clone())
     }
 }

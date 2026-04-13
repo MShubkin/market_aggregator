@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
 
 use linked_hash_set::LinkedHashSet;
 use log::{error, info};
@@ -44,7 +44,7 @@ pub struct DashboardComponent {
     currencies_symbols: Arc<LinkedHashSet<String>>,
     indices_symbols: Arc<LinkedHashSet<String>>,
     us_stocks_symbols: Arc<LinkedHashSet<String>>,
-    prices: Arc<RwLock<HashMap<String, RealTimePriceData>>>,
+    prices: HashMap<String, RealTimePriceData>,
     reference_data: Arc<ReferenceData>,
 }
 /// Dashboard Component Messages
@@ -101,7 +101,7 @@ impl Component for DashboardComponent {
             currencies_symbols: Arc::new(DashboardConfiguration::get_currencies_symbols()),
             indices_symbols: Arc::new(DashboardConfiguration::get_indices_symbols()),
             us_stocks_symbols: Arc::new(DashboardConfiguration::get_us_stocks()),
-            prices: Arc::new(RwLock::new(HashMap::new())),
+            prices: HashMap::new(),
             reference_data: Arc::new(ctx.props().reference_data.clone()),
         }
     }
@@ -120,19 +120,17 @@ impl Component for DashboardComponent {
                         match serde_json::from_str::<PriceMessage>(data.as_str()) {
                             Ok(price_message) => {
                                 info!("price_message {:?}", price_message);
-                                if let Ok(mut lock) = self.prices.write() {
-                                    lock.insert(
-                                        price_message.symbol.clone(),
-                                        RealTimePriceData {
-                                            symbol: price_message.symbol,
-                                            price: price_message.price,
-                                            bid: price_message.bid,
-                                            ask: price_message.ask,
-                                            time: format_time(price_message.timestamp),
-                                            ..Default::default()
-                                        },
-                                    );
-                                }
+                                self.prices.insert(
+                                    price_message.symbol.clone(),
+                                    RealTimePriceData {
+                                        symbol: price_message.symbol,
+                                        price: price_message.price,
+                                        bid: price_message.bid,
+                                        ask: price_message.ask,
+                                        time: format_time(price_message.timestamp),
+                                        ..Default::default()
+                                    },
+                                );
                             }
                             Err(e) => {
                                 error!("Failed to parse price message: {}", e);
@@ -207,15 +205,10 @@ impl Component for DashboardComponent {
 impl DashboardComponent {
     fn get_quote_data(&self, quote_type: QuoteType) -> HashMap<String, RealTimePriceData> {
         let symbols = DashboardConfiguration::get_quote_symbols(quote_type);
-        let data = match self.prices.read() {
-            Ok(data) => data,
-            Err(_) => return HashMap::new(),
-        };
-        let filter_data = data
+        self.prices
             .iter()
-            .filter(|value| symbols.contains(value.0))
-            .map(|value| (value.0.clone(), value.1.clone()))
-            .collect();
-        filter_data
+            .filter(|(k, _)| symbols.contains(k.as_str()))
+            .map(|(k, v)| (k.clone(), v.clone()))
+            .collect()
     }
 }
